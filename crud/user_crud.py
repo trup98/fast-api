@@ -1,15 +1,21 @@
 from sqlalchemy.orm import Session
 from modals.user_modal import User
-from schemas.user_schema import UserCreate, UserUpdate
+from schemas.user_schema import UserUpdate
 from fastapi import HTTPException, status
 
 
 def get_all_users(db: Session):
-    return db.query(User).all()
+    return db.query(User).filter(User.is_deleted == False).all()
 
 
 def get_user_by_id(db: Session, user_id: int):
-    return db.query(User).filter(User.id == user_id).first()
+    user = db.query(User).filter(User.id == user_id, User.is_deleted == False).first()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User Not Found"
+        )
+    return user
 
 
 def create_user(db: Session, user):
@@ -29,19 +35,29 @@ def create_user(db: Session, user):
 
 def update_user(db: Session, user_id: int, user: UserUpdate):
     db_user = db.query(User).filter(User.id == user_id).first()
-    if db_user:
-        db_user.name = user.name
-        db_user.email = user.email
-        db.commit()
-        db.refresh(db_user)
+    if not db_user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User Not Found"
+        )
+    db_user.user_name = user.user_name
+    db_user.first_name = user.first_name
+    db_user.last_name = user.last_name
+    db.commit()
+    db.refresh(db_user)
     return db_user
 
 
 def delete_user(db: Session, user_id: int):
     db_user = db.query(User).filter(User.id == user_id).first()
-    if db_user:
-        db.delete(db_user)
-        db.commit()
+    if not db_user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User Not Found"
+        )
+    db_user.is_deleted = True
+    db.commit()
+    db.refresh(db_user)
     return db_user
 
 

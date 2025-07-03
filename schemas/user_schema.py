@@ -4,20 +4,24 @@ from pydantic import BaseModel, EmailStr
 class UserBase(BaseModel):
     user_name: str
     email: EmailStr
+
+
+class UserCreate(UserBase):
     first_name: str
     last_name: str
 
 
-class UserCreate(UserBase):
-    pass
+class UserUpdate(BaseModel):
+    user_name: str
+    first_name: str
+    last_name: str
 
 
-class UserUpdate(UserBase):
-    pass
-
-
-class UserOut(UserBase):
-    id: int
+class UserOut(BaseModel):
+    user_name: str
+    email: EmailStr
+    first_name: str
+    last_name: str
 
     class Config:
         orm_mode = True
